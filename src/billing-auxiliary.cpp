@@ -177,7 +177,7 @@ int billing_logcdr (MmsCdrStruct *p_psoCDR)
 		snprintf (
 			mcTimeStamp, sizeof (mcTimeStamp),
 			"%02u.%02u.%04u %02u:%02u%02u",
-			soTm.tm_mday, soTm.tm_mon + 1, soTm.tm_yday + 1900,
+			soTm.tm_mday, soTm.tm_mon + 1, soTm.tm_year + 1900,
 			soTm.tm_hour, soTm.tm_min, soTm.tm_sec);
 		psoModuleData->m_coLog.WriteLog (
 		"%s %s %s %s %s %s %s %u",
