@@ -12,7 +12,7 @@ void * billing_init (const char *p_pszSettings);
 int billing_fini (void *p_pModuleData);
 
 struct SList {
-	const char *m_pszValue;
+	char *m_pszValue;
 	struct SList *m_psoNext;
 };
 int billing_billmms (

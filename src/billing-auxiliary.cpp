@@ -152,6 +152,30 @@ int billing_billmms (
 	SModuleData *psoModuleData = (SModuleData *) p_pModuleData;
 
 	ENTER_ROUT (psoModuleData->m_iDebug, psoModuleData->m_coLog);
+
+	if (0 < psoModuleData->m_iDebug) {
+		std::string strToList;
+		SList *psoTmp = p_psoTo;
+		while (psoTmp) {
+			if (psoTmp->m_pszValue) {
+				if (strToList.length ()) {
+					strToList += ',';
+				}
+				strToList += psoTmp->m_pszValue;
+			}
+			psoTmp = psoTmp->m_psoNext;
+		}
+
+		psoModuleData->m_coLog.WriteLog (
+			"%s;%s;%s;%s;%u",
+			p_pszFrom,
+			strToList.c_str (),
+			p_pszMsgId,
+			p_pszVASPid,
+			p_uiMsgSize);
+		iRetVal = 1;
+	}
+
 	LEAVE_ROUT (psoModuleData->m_iDebug, psoModuleData->m_coLog, iRetVal);
 
 	return iRetVal;
@@ -176,11 +200,11 @@ int billing_logcdr (MmsCdrStruct *p_psoCDR)
 		}
 		snprintf (
 			mcTimeStamp, sizeof (mcTimeStamp),
-			"%02u.%02u.%04u %02u:%02u%02u",
+			"%02u.%02u.%04u:%02u:%02u:%02u",
 			soTm.tm_mday, soTm.tm_mon + 1, soTm.tm_year + 1900,
 			soTm.tm_hour, soTm.tm_min, soTm.tm_sec);
 		psoModuleData->m_coLog.WriteLog (
-		"%s %s %s %s %s %s %s %u",
+		"%s;%s;%s;%s;%s;%s;%s;%u",
 		mcTimeStamp, p_psoCDR->from, p_psoCDR->to, p_psoCDR->msgid, p_psoCDR->vaspid, p_psoCDR->src_interface, p_psoCDR->dst_interface, p_psoCDR->msg_size);
 		/* запрашиваем объект подключения к БД */
 		pcoDBConn = db_pool_get ();
