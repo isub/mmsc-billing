@@ -13,6 +13,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <errno.h>
 
 #include "mmsc-billing.h"
 #include "billing-auxiliary.h"
@@ -40,6 +41,9 @@ static int mms_billmsg (
 	Octstr *msgid,
 	void *module_data)
 {
+	if (NULL == module_data)
+		return EINVAL;
+
 	int iRetVal = 0;
 	const char 
 		*pszFrom = octstr_get_cstr (from),
