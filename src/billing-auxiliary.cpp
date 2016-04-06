@@ -33,10 +33,10 @@ void * billing_init (const char *p_pszSettings)
 	int iFnRes;
 
 	do {
-		/* выделяем память для структуры данных модуля */
+		/* РІС‹РґРµР»СЏРµРј РїР°РјСЏС‚СЊ РґР»СЏ СЃС‚СЂСѓРєС‚СѓСЂС‹ РґР°РЅРЅС‹С… РјРѕРґСѓР»СЏ */
 		psoRetVal = new SModuleData;
 
-		/* разбираем строку инициализации */
+		/* СЂР°Р·Р±РёСЂР°РµРј СЃС‚СЂРѕРєСѓ РёРЅРёС†РёР°Р»РёР·Р°С†РёРё */
 		iFnRes = billing_apply_settings (
 			p_pszSettings,
 			psoRetVal->m_coConf);
@@ -46,14 +46,14 @@ void * billing_init (const char *p_pszSettings)
 			break;
 		}
 
-		/* уровень отладки */
+		/* СѓСЂРѕРІРµРЅСЊ РѕС‚Р»Р°РґРєРё */
 		std::string strParamVal;
 		psoRetVal->m_coConf.GetParamValue ("debug", strParamVal);
 		if (strParamVal.length ()) {
 			psoRetVal->m_iDebug = atoi (strParamVal.c_str ());
 		}
 
-		/* инициализируем логгер */
+		/* РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј Р»РѕРіРіРµСЂ */
 		std::string strParamValue;
 		iFnRes = psoRetVal->m_coConf.GetParamValue ("log_file_mask", strParamValue);
 		if (iFnRes) {
@@ -68,7 +68,7 @@ void * billing_init (const char *p_pszSettings)
 			break;
 		}
 
-		/* инициализируем пул подключений к БД */
+		/* РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РїСѓР» РїРѕРґРєР»СЋС‡РµРЅРёР№ Рє Р‘Р” */
 		iFnRes = db_pool_init (&(psoRetVal->m_coLog), &(psoRetVal->m_coConf));
 		if (iFnRes) {
 			delete psoRetVal;
@@ -163,9 +163,9 @@ int billing_logcdr (MmsCdrStruct *p_psoCDR)
 			soTm.tm_mday, soTm.tm_mon + 1, soTm.tm_year + 1900,
 			soTm.tm_hour, soTm.tm_min, soTm.tm_sec);
 		psoModuleData->m_coLog.WriteLog (
-		"%s;%s;%s;%s;%s;%s;%s;%u",
+		"cdr: %s;%s;%s;%s;%s;%s;%s;%u",
 		mcTimeStamp, p_psoCDR->from, p_psoCDR->to, p_psoCDR->msgid, p_psoCDR->vaspid, p_psoCDR->src_interface, p_psoCDR->dst_interface, p_psoCDR->msg_size);
-		/* запрашиваем объект подключения к БД */
+		/* Р·Р°РїСЂР°С€РёРІР°РµРј РѕР±СЉРµРєС‚ РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р” */
 		pcoDBConn = db_pool_get ();
 		if (NULL == pcoDBConn) {
 			iRetVal = -1;
@@ -205,15 +205,15 @@ try_again:
 		} catch (otl_exception &coExept) {
 			psoModuleData->m_coLog.WriteLog ("%s: error: code: '%d'; description: '%s'", __FUNCTION__, coExept.code, coExept.msg);
 			pcoDBConn->rollback ();
-			/* проверим работоспособность подключения если количество попыток еще не израсходовано */
+			/* РїСЂРѕРІРµСЂРёРј СЂР°Р±РѕС‚РѕСЃРїРѕСЃРѕР±РЅРѕСЃС‚СЊ РїРѕРґРєР»СЋС‡РµРЅРёСЏ РµСЃР»Рё РєРѕР»РёС‡РµСЃС‚РІРѕ РїРѕРїС‹С‚РѕРє РµС‰Рµ РЅРµ РёР·СЂР°СЃС…РѕРґРѕРІР°РЅРѕ */
 			if (-- iAttemptLeft) {
 				iFnRes = db_pool_check (*pcoDBConn);
-				/* если подключение необходимо восстановить */
+				/* РµСЃР»Рё РїРѕРґРєР»СЋС‡РµРЅРёРµ РЅРµРѕР±С…РѕРґРёРјРѕ РІРѕСЃСЃС‚Р°РЅРѕРІРёС‚СЊ */
 				if (iFnRes) {
 					iFnRes = db_pool_reconnect (*pcoDBConn);
-					/* если подключение восстановлено */
+					/* РµСЃР»Рё РїРѕРґРєР»СЋС‡РµРЅРёРµ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅРѕ */
 					if (0 == iFnRes) {
-						/* попробуем еще раз */
+						/* РїРѕРїСЂРѕР±СѓРµРј РµС‰Рµ СЂР°Р· */
 						goto try_again;
 					}
 				}

@@ -57,7 +57,7 @@ static int mms_billmsg (
 
 	int i = 0;
 	int l = gwlist_len (to);
-	/* формируем список получателей */
+	/* С„РѕСЂРјРёСЂСѓРµРј СЃРїРёСЃРѕРє РїРѕР»СѓС‡Р°С‚РµР»РµР№ */
 	for (; i < l; ++ i) {
 		psoOctstr = (Octstr *) gwlist_get (to, i);
 		pszStrValue = octstr_get_cstr (psoOctstr);
@@ -72,10 +72,10 @@ static int mms_billmsg (
 		psoNext->m_pszValue = gw_strdup (pszStrValue);
 	}
 
-	/* выполняем проверку */
+	/* РІС‹РїРѕР»РЅСЏРµРј РїСЂРѕРІРµСЂРєСѓ */
 	iRetVal = billing_billmms (pszFrom, psoList, msg_size, pszVASId, pszMsgId, module_data);
 
-	/* освобождаем память, занятую списком получателей */
+	/* РѕСЃРІРѕР±РѕР¶РґР°РµРј РїР°РјСЏС‚СЊ, Р·Р°РЅСЏС‚СѓСЋ СЃРїРёСЃРєРѕРј РїРѕР»СѓС‡Р°С‚РµР»РµР№ */
 	while (psoList) {
 		psoNext = psoList->m_psoNext;
 		if (psoList->m_pszValue) {
