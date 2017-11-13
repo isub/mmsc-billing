@@ -52,7 +52,6 @@ static int mms_billmsg (
 	struct SList
 		*psoList = NULL,
 		*psoNext = NULL;
-	const char *pszStrValue;
 	Octstr *psoOctstr = NULL;
 
 	int i = 0;
@@ -60,7 +59,6 @@ static int mms_billmsg (
 	/* формируем список получателей */
 	for (; i < l; ++ i) {
 		psoOctstr = (Octstr *) gwlist_get (to, i);
-		pszStrValue = octstr_get_cstr (psoOctstr);
 		if (NULL == psoList) {
 			psoList = gw_malloc (sizeof (struct SList));
 			psoNext = psoList;
@@ -69,7 +67,7 @@ static int mms_billmsg (
 			psoNext = psoNext->m_psoNext;
 		}
 		memset (psoNext, 0, sizeof (struct SList));
-		psoNext->m_pszValue = gw_strdup (pszStrValue);
+		psoNext->m_pszValue = gw_strdup (octstr_get_cstr (psoOctstr));
 	}
 
 	/* выполняем проверку */
