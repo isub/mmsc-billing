@@ -16,7 +16,9 @@ void mmsc_billing_write_cdr(
   const char *p_pszVASPId,
   const char *p_pszSrcInterface,
   const char *p_pszDstInterface,
-  int p_iMsgSize );
+  int p_iMsgSize,
+	const char *p_pszSenderProxy,
+	const char *p_pszRecpntProxy );
 
 #ifdef __cplusplus
 }

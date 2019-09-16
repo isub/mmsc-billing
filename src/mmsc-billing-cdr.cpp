@@ -23,7 +23,7 @@ static u_int32_t   g_uiCDRInterval;
 static const char *g_pszCDRDir;
 static const char *g_pszCDRComplDir;
 static const char *g_pszMainService;
-std::string g_strTitle = "datetime;addr_init;addr_term;msg_id;vas_id;device_init;device_term;volume\r\n";
+std::string g_strTitle = "datetime;addr_init;addr_term;msg_id;vas_id;device_init;device_term;volume;senderProxy;recpntProxy\r\n";
 
 #define CDR_FILE_FLAG (O_CREAT | O_APPEND | O_RDWR)
 #define CDR_FILE_MODE (S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH)
@@ -291,7 +291,9 @@ void mmsc_billing_write_cdr(
   const char *p_pszVASPId,
   const char *p_pszSrcInterface,
   const char *p_pszDstInterface,
-  int p_iMsgSize )
+  int p_iMsgSize,
+	const char *p_pszSenderProxy,
+	const char *p_pszRecpntProxy )
 {
   std::string strRecCont;
 
@@ -312,6 +314,10 @@ void mmsc_billing_write_cdr(
   strRecCont += p_pszDstInterface;
   strRecCont += ';';
   strRecCont += std::to_string( static_cast<long long int>( p_iMsgSize ) );
+  strRecCont += ';';
+  strRecCont += p_pszSenderProxy;
+  strRecCont += ';';
+  strRecCont += p_pszRecpntProxy;
   strRecCont += "\r\n";
 
   if ( -1 != g_iFile ) {

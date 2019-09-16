@@ -17,6 +17,29 @@ int billing_apply_settings (
 	return p_coConfig.LoadConf(p_pszSettings, 0);
 }
 
+bool mmsc_billing_is_main_service( std::string &p_strServiceName )
+{
+  int iRetVal = 0;
+  pid_t tPId;
+  std::string str;
+  char mcPath[ PATH_MAX ];
+  size_t tLen;
+
+  tPId = getpid();
+
+  str = "/proc/" + std::to_string( static_cast<long long unsigned> ( tPId ) );
+  str += "/exe";
+
+  tLen = readlink( str.c_str(), mcPath, PATH_MAX );
+  if ( static_cast<size_t>( -1 ) != tLen && tLen < PATH_MAX ) {
+    mcPath[ tLen ] = '\0';
+  } else {
+    mcPath[ 0 ] = '\0';
+  }
+
+  return ( 0 == strcmp( mcPath, p_strServiceName.c_str() ) );
+}
+
 void * billing_init (const char *p_pszSettings)
 {
 	SModuleData *psoRetVal = NULL;
@@ -71,8 +94,43 @@ void * billing_init (const char *p_pszSettings)
       break;
     }
 
+    std::string strMainService, strDBUser, strDBPswd, strDBDescr;
+    int iPoolSize;
+    const char *pcszConfParam = NULL;
+
+    /* запрашиваем в имя основного сервиса */
+    pcszConfParam = "main_service";
+    iFnRes = psoRetVal->m_coConf.GetParamValue( pcszConfParam, strMainService );
+    if ( 0 != iFnRes ) {
+      strMainService = "/usr/local/bin/mmsc";
+    }
+
+    if ( !mmsc_billing_is_main_service( strMainService ) ) {
+      iPoolSize = 1;
+    } else {
+      std::string strValue;
+      /* запрашиваем размер пула БД из конфигурации */
+      pcszConfParam = "db_pool_size";
+      iFnRes = psoRetVal->m_coConf.GetParamValue( pcszConfParam, strValue );
+      if ( 0 == iFnRes ) {
+        iPoolSize = atoi( strValue.c_str() );
+      }
+    }
+
+    /* запрашиваем имя пользователя БД из конфигурации */
+    pcszConfParam = "db_user";
+    psoRetVal->m_coConf.GetParamValue( pcszConfParam, strDBUser );
+
+    /* запрашиваем пароль пользователя БД из конфигурации */
+    pcszConfParam = "db_pswd";
+    psoRetVal->m_coConf.GetParamValue( pcszConfParam, strDBPswd );
+
+    /* запрашиваем дескриптор БД из конфигурации */
+    pcszConfParam = "db_descr";
+    psoRetVal->m_coConf.GetParamValue( pcszConfParam, strDBDescr );
+
 		/* инициализируем пул подключений к БД */
-		iFnRes = db_pool_init (&(psoRetVal->m_coLog), &(psoRetVal->m_coConf));
+    iFnRes = db_pool_init( &( psoRetVal->m_coLog ), strDBUser, strDBPswd, strDBDescr, iPoolSize );
 		if (iFnRes) {
 			delete psoRetVal;
 			psoRetVal = NULL;
@@ -172,7 +230,8 @@ int billing_logcdr (MmsCdrStruct *p_psoCDR)
       break;
     }
     /* записываем cdr в файл */
-    mmsc_billing_write_cdr( mcTimeStamp, p_psoCDR->from, p_psoCDR->to, p_psoCDR->msgid, p_psoCDR->vaspid, p_psoCDR->src_interface, p_psoCDR->dst_interface, p_psoCDR->msg_size );
+    mmsc_billing_write_cdr( mcTimeStamp, p_psoCDR->from, p_psoCDR->to, p_psoCDR->msgid, p_psoCDR->vaspid, p_psoCDR->src_interface, p_psoCDR->dst_interface, p_psoCDR->msg_size,
+		p_psoCDR->m_mcSenderProxy , p_psoCDR->m_mcRecpntProxy );
 		/* запрашиваем объект подключения к БД */
 		pcoDBConn = db_pool_get ();
 		if (NULL == pcoDBConn) {
@@ -193,9 +252,9 @@ int billing_logcdr (MmsCdrStruct *p_psoCDR)
 				1,
 				"insert "
 					"into ps.mms_cdr "
-					"(mms_time, mms_from, mms_to, mms_id, vas_id, src_interface, dst_interface, msg_size) "
+					"(mms_time, mms_from, mms_to, mms_id, vas_id, src_interface, dst_interface, msg_size, senderProxy, recpntProxy ) "
 				"values "
-					"(:mms_time /* timestamp */, :mms_from /* char[256] */, :mms_to /* char[256] */, :mms_id /* char[256] */, :vas_id /* char[256] */, :src_interface /* char[256] */, :dst_interface /* char[256] */, :msg_size /* unsigned */)",
+					"(:mms_time /* timestamp */, :mms_from /* char[256] */, :mms_to /* char[256] */, :mms_id /* char[256] */, :vas_id /* char[256] */, :src_interface /* char[256] */, :dst_interface /* char[256] */, :msg_size /* unsigned */, :senderProxy /* char[256] */, :recpntProxy /* char[256] */)",
 				*pcoDBConn);
 			coStream.set_commit (0);
 			coStream
@@ -206,7 +265,9 @@ int billing_logcdr (MmsCdrStruct *p_psoCDR)
 				<< p_psoCDR->vaspid
 				<< p_psoCDR->src_interface
 				<< p_psoCDR->dst_interface
-				<< (unsigned int) p_psoCDR->msg_size;
+				<< (unsigned int) p_psoCDR->msg_size
+				<< p_psoCDR->m_mcSenderProxy
+				<< p_psoCDR->m_mcRecpntProxy;
 			pcoDBConn->commit ();
 			coStream.close ();
 		} catch (otl_exception &coExept) {
